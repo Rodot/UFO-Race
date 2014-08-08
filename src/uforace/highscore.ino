@@ -19,33 +19,34 @@ void initHighscore(){
 
 void saveHighscore(unsigned int score){
   if(score < highscore[NUM_HIGHSCORE-1]){//if it's a highscore
-    drawNewHighscore(score);
-    gb.getDefaultName(name[NUM_HIGHSCORE-1]);
-    gb.keyboard(name[NUM_HIGHSCORE-1], NAMELENGTH+1);
-    highscore[NUM_HIGHSCORE-1] = score;
-    for(byte i=NUM_HIGHSCORE-1; i>0; i--){ //bubble sorting FTW
-      if(highscore[i-1] > highscore[i]){
-        char tempName[NAMELENGTH];
-        strcpy(tempName, name[i-1]);
-        strcpy(name[i-1], name[i]);
-        strcpy(name[i], tempName);
-        unsigned int tempScore;
-        tempScore = highscore[i-1];
-        highscore[i-1] = highscore[i];
-        highscore[i] = tempScore;
+    if(drawNewHighscore(score)){
+      gb.getDefaultName(name[NUM_HIGHSCORE-1]);
+      gb.keyboard(name[NUM_HIGHSCORE-1], NAMELENGTH+1);
+      highscore[NUM_HIGHSCORE-1] = score;
+      for(byte i=NUM_HIGHSCORE-1; i>0; i--){ //bubble sorting FTW
+        if(highscore[i-1] > highscore[i]){
+          char tempName[NAMELENGTH];
+          strcpy(tempName, name[i-1]);
+          strcpy(name[i-1], name[i]);
+          strcpy(name[i], tempName);
+          unsigned int tempScore;
+          tempScore = highscore[i-1];
+          highscore[i-1] = highscore[i];
+          highscore[i] = tempScore;
+        }
+        else{
+          break;
+        }
       }
-      else{
-        break;
+      for(byte thisScore = 0; thisScore < NUM_HIGHSCORE; thisScore++){
+        for(byte i=0; i<NAMELENGTH; i++){
+          EEPROM.write(i + thisScore*(NAMELENGTH+2), name[thisScore][i]);
+        }
+        EEPROM.write(NAMELENGTH + thisScore*(NAMELENGTH+2), highscore[thisScore] & 0x00FF); //LSB
+        EEPROM.write(NAMELENGTH+1 + thisScore*(NAMELENGTH+2), (highscore[thisScore] >> 8) & 0x00FF); //MSB
       }
+      drawHighScores();
     }
-    for(byte thisScore = 0; thisScore < NUM_HIGHSCORE; thisScore++){
-      for(byte i=0; i<NAMELENGTH; i++){
-        EEPROM.write(i + thisScore*(NAMELENGTH+2), name[thisScore][i]);
-      }
-      EEPROM.write(NAMELENGTH + thisScore*(NAMELENGTH+2), highscore[thisScore] & 0x00FF); //LSB
-      EEPROM.write(NAMELENGTH+1 + thisScore*(NAMELENGTH+2), (highscore[thisScore] >> 8) & 0x00FF); //MSB
-    }
-    drawHighScores();
   }
   else{
     gb.popup(F("NEW LAP!"),20);
@@ -78,7 +79,7 @@ void drawHighScores(){
   }
 }
 
-void drawNewHighscore(unsigned int score){
+boolean drawNewHighscore(unsigned int score){
   gb.sound.playPattern(highscore_sound, 0);
   while(1){
     if(gb.update()){
@@ -95,14 +96,19 @@ void drawNewHighscore(unsigned int score){
       gb.display.print(highscore[NUM_HIGHSCORE-1]);
       gb.display.cursorX = 0;
       gb.display.cursorY = 40;
-      gb.display.print(F("\x15:accept"));
+      gb.display.print(F("\25:Save \27:Exit"));
       if(gb.buttons.pressed(BTN_A)){
         gb.sound.playOK();
-        break;
+        return true;
+      }
+      if(gb.buttons.pressed(BTN_C)){
+        gb.sound.playCancel();
+        return false;
       }
     }
   }
 }
+
 
 
 
