@@ -13,7 +13,7 @@ void updateTime(){
       time = 0;
     }
     else{
-      if(time > 20){
+      if(time > 100){
         gb.display.setFont(font5x7);
         saveHighscore(time);
         gb.display.setFont(font3x5);

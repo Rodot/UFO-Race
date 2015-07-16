@@ -61,6 +61,7 @@ void updatePlayer(){
   //accelerator
   switch(currentTile){
   case 1: //right
+  case 7: //start (to avoid people to stop on it)
     player.vx += 1;
     break;
   case 2: //down
